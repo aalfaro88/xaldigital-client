@@ -48,4 +48,78 @@
     text-decoration: underline;
   }
 
+
+  /* ------------ANSWERS------------- */
+
+
+  .answer-container {
+    max-width: 1300px; 
+    max-height: 500px;
+    overflow: auto; 
+    border: 1px solid #ccc; 
+  }
+  
+  
+  table {
+    width: 100%; /* Table takes 100% width of its container */
+    border-collapse: collapse; /* Collapse table borders */
+  }
+
+
+  .answer-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  .answer-table th {
+    background-color: #f4f4f4;
+    color: #333;
+    font-weight: bold;
+    padding: 10px;
+    border-bottom: 2px solid #ddd;
+  }
+
+  .answer-table td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .answer-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  .answer-table tr:hover {
+    background-color: #f1f1f1;
+  }
+
+  .answer-table a {
+    color: #06c;
+    text-decoration: none;
+  }
+
+  .answer-table a:hover {
+    text-decoration: underline;
+  }
+  /* -------------PIE CHART------------- */
+
+  .pie-chart-container {
+    max-width: 300px; /* Adjust the max-width as needed */
+    max-height: 300px; /* Adjust the max-height as needed */
+    margin: 0 auto; /* Center the chart horizontally */
+  }
+  
+/* --------BUTTON----------- */
+  button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 10px;
+  }
+  
+  button.active {
+    background-color: #f4f4f4; /* Change the background color to highlight the active button */
+  }
+  
   

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { get } from '../services/authService';
-import { Pie } from 'react-chartjs-2'; 
+import Chart from 'chart.js/auto';
 import './StackOverflowData.css';
 
 const StackOverflowData = () => {
@@ -11,10 +11,52 @@ const StackOverflowData = () => {
   const [lowestViewCountAnswer, setLowestViewCountAnswer] = useState(null);
   const [oldestAnswer, setOldestAnswer] = useState(null);
   const [newestAnswer, setNewestAnswer] = useState(null);
+  const pieChartRef = useRef(null);
+  const [selectedOption, setSelectedOption] = useState('Insights'); // 'Insights' is the default selected option
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (pieChartRef.current) {
+      // Create or update the Pie chart
+      const pieChart = new Chart(pieChartRef.current, {
+        type: 'pie',
+        data: {
+          labels: ['Answered', 'Unanswered'],
+          datasets: [
+            {
+              data: [answeredCount, unansweredCount],
+              backgroundColor: ['#36A2EB', '#FF6384'],
+            },
+          ],
+        },
+        options: {
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                font: {
+                  size: 16,
+                },
+              },
+            },
+            tooltip: {
+              bodyFont: {
+                size: 16,
+              },
+            },
+          },
+        },
+      });
+
+      return () => {
+        // Cleanup the chart on unmount
+        pieChart.destroy();
+      };
+    }
+  }, [answeredCount, unansweredCount]);
 
   const fetchData = async () => {
     try {
@@ -60,66 +102,97 @@ const StackOverflowData = () => {
       setLowestViewCountAnswer(lowestViewCountAnswer);
       setOldestAnswer(oldestAnswer);
       setNewestAnswer(newestAnswer);
+
+      
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
 
+  const handleInsightsClick = () => {
+    setSelectedOption('Insights');
+    if (pieChartRef.current) {
+      pieChartRef.current.innerHTML = '';
+    }
+  };
+
+  const handleTableClick = () => {
+    setSelectedOption('Table');
+  };
+
   return (
     <div>
       <h2>Stack Overflow Data</h2>
-
-      {/* Display answers */}
-      <div className='answers'>
-        <p>Número de respuestas contestadas: {answeredCount}</p>
-        <p>Número de respuestas no contestadas: {unansweredCount}</p>
-        {highestReputationAnswer && (
-          <p>Respuesta con mayor reputación: {highestReputationAnswer.title}</p>
-        )}
-        {lowestViewCountAnswer && (
-          <p>Respuesta con menor número de vistas: {lowestViewCountAnswer.title}</p>
-        )}
-        {oldestAnswer && (
-          <p>Respuesta más vieja: {oldestAnswer.title}</p>
-        )}
-        {newestAnswer && (
-          <p>Respuesta más actual: {newestAnswer.title}</p>
-        )}
+      <div>
+        <button onClick={handleInsightsClick} className={selectedOption === 'Insights' ? 'active' : ''}>
+          Insights
+        </button>
+        <button onClick={handleTableClick} className={selectedOption === 'Table' ? 'active' : ''}>
+          Table
+        </button>
       </div>
 
-      {/* Display the table */}
-      <div className='table-container'>
-        {data && data.data && data.data.items ? (
-          <table className="stackoverflow-table">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Tags</th>
-                <th>Owner</th>
-                <th>Is Answered</th>
-                <th>View Count</th>
-                <th>Score</th>
-                <th>Link</th>
-              </tr>
-            </thead>
+      {selectedOption === 'Insights' ? (
+        <div className='answer-container'>
+          <table className="answer-table">
             <tbody>
-              {data.data.items.map(item => (
-                <tr key={item.question_id}>
-                  <td>{item.title}</td>
-                  <td>{item.tags.join(', ')}</td>
-                  <td>{item.owner.display_name}</td>
-                  <td>{item.is_answered ? 'Yes' : 'No'}</td>
-                  <td>{item.view_count}</td>
-                  <td>{item.score}</td>
-                  <td><a href={item.link} target="_blank" rel="noopener noreferrer">View Question</a></td>
-                </tr>
-              ))}
+              <tr>
+                <td>Number of Unanswered Calls:</td>
+                <td>
+                  <div className='pie-chart-container'>
+                    <canvas ref={pieChartRef}></canvas>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>Question with the Highest Reputation:</td>
+                <td>{highestReputationAnswer && highestReputationAnswer.title}</td>
+              </tr>
+              <tr>
+                <td>Newest Answer:</td>
+                <td>{newestAnswer && newestAnswer.title}</td>
+              </tr>
+              <tr>
+                <td>Oldest Answer:</td>
+                <td>{oldestAnswer && oldestAnswer.title}</td>
+              </tr>
             </tbody>
           </table>
-        ) : (
-          <p>Loading data...</p>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className='table-container'>
+          {data && data.data && data.data.items ? (
+            <table className="stackoverflow-table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Tags</th>
+                  <th>Owner</th>
+                  <th>Is Answered</th>
+                  <th>View Count</th>
+                  <th>Score</th>
+                  <th>Link</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.data.items.map(item => (
+                  <tr key={item.question_id}>
+                    <td>{item.title}</td>
+                    <td>{item.tags.join(', ')}</td>
+                    <td>{item.owner.display_name}</td>
+                    <td>{item.is_answered ? 'Yes' : 'No'}</td>
+                    <td>{item.view_count}</td>
+                    <td>{item.score}</td>
+                    <td><a href={item.link} target="_blank" rel="noopener noreferrer">View Question</a></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p>Loading data...</p>
+          )}
+        </div>
+      )}
     </div>
   );
 };
