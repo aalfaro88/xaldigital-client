@@ -13,6 +13,7 @@ const StackOverflowData = () => {
   const [newestAnswer, setNewestAnswer] = useState(null);
   const pieChartRef = useRef(null);
   const [selectedOption, setSelectedOption] = useState('Insights'); // 'Insights' is the default selected option
+  const [error, setError] = useState(null); // Error state
 
   useEffect(() => {
     fetchData();
@@ -103,9 +104,18 @@ const StackOverflowData = () => {
       setOldestAnswer(oldestAnswer);
       setNewestAnswer(newestAnswer);
 
+      console.log("Number of Answered Calls:", answeredCount);
+      console.log("Number of Unanswered Calls:", unansweredCount);
+      console.log("Answer with the Highest Reputation:", highestReputationAnswer);
+      console.log("Answer with the Lowest View Count:", lowestViewCountAnswer);
+      console.log("Oldest Answer:", oldestAnswer);
+      console.log("Newest Answer:", newestAnswer);
       
     } catch (error) {
       console.error('Error fetching data:', error);
+      if (error.response && error.response.status === 500) {
+        setError("Exceeded API call limit (500 error). Please try again later.");
+      }
     }
   };
 
@@ -114,6 +124,8 @@ const StackOverflowData = () => {
     if (pieChartRef.current) {
       pieChartRef.current.innerHTML = '';
     }
+    // Clear the error message when switching to Insights
+    setError(null);
   };
 
   const handleTableClick = () => {
@@ -132,66 +144,70 @@ const StackOverflowData = () => {
         </button>
       </div>
 
-      {selectedOption === 'Insights' ? (
-        <div className='answer-container'>
-          <table className="answer-table">
-            <tbody>
-              <tr>
-                <td>Number of Unanswered Calls:</td>
-                <td>
-                  <div className='pie-chart-container'>
-                    <canvas ref={pieChartRef}></canvas>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Question with the Highest Reputation:</td>
-                <td>{highestReputationAnswer && highestReputationAnswer.title}</td>
-              </tr>
-              <tr>
-                <td>Newest Answer:</td>
-                <td>{newestAnswer && newestAnswer.title}</td>
-              </tr>
-              <tr>
-                <td>Oldest Answer:</td>
-                <td>{oldestAnswer && oldestAnswer.title}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      {error ? ( // Display error message if there's an error
+        <div className="error-message">{error}</div>
       ) : (
-        <div className='table-container'>
-          {data && data.data && data.data.items ? (
-            <table className="stackoverflow-table">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Tags</th>
-                  <th>Owner</th>
-                  <th>Is Answered</th>
-                  <th>View Count</th>
-                  <th>Score</th>
-                  <th>Link</th>
-                </tr>
-              </thead>
+        selectedOption === 'Insights' ? (
+          <div className='answer-container'>
+            <table className="answer-table">
               <tbody>
-                {data.data.items.map(item => (
-                  <tr key={item.question_id}>
-                    <td>{item.title}</td>
-                    <td>{item.tags.join(', ')}</td>
-                    <td>{item.owner.display_name}</td>
-                    <td>{item.is_answered ? 'Yes' : 'No'}</td>
-                    <td>{item.view_count}</td>
-                    <td>{item.score}</td>
-                    <td><a href={item.link} target="_blank" rel="noopener noreferrer">View Question</a></td>
-                  </tr>
-                ))}
+                <tr>
+                  <td>Number of Unanswered Calls:</td>
+                  <td>
+                    <div className='pie-chart-container'>
+                      <canvas ref={pieChartRef}></canvas>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Question with the Highest Reputation:</td>
+                  <td>{highestReputationAnswer && highestReputationAnswer.title}</td>
+                </tr>
+                <tr>
+                  <td>Newest Answer:</td>
+                  <td>{newestAnswer && newestAnswer.title}</td>
+                </tr>
+                <tr>
+                  <td>Oldest Answer:</td>
+                  <td>{oldestAnswer && oldestAnswer.title}</td>
+                </tr>
               </tbody>
             </table>
-          ) : (
-            <p>Loading data...</p>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className='table-container'>
+            {data && data.data && data.data.items ? (
+              <table className="stackoverflow-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Tags</th>
+                    <th>Owner</th>
+                    <th>Is Answered</th>
+                    <th>View Count</th>
+                    <th>Score</th>
+                    <th>Link</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.data.items.map(item => (
+                    <tr key={item.question_id}>
+                      <td>{item.title}</td>
+                      <td>{item.tags.join(', ')}</td>
+                      <td>{item.owner.display_name}</td>
+                      <td>{item.is_answered ? 'Yes' : 'No'}</td>
+                      <td>{item.view_count}</td>
+                      <td>{item.score}</td>
+                      <td><a href={item.link} target="_blank" rel="noopener noreferrer">View Question</a></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p>Loading data...</p>
+            )}
+          </div>
+        )
       )}
     </div>
   );
